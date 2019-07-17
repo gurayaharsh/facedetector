@@ -5,14 +5,10 @@ import Logo from '../components/Logo';
 import ImageLink from '../components/ImageLink';
 import Counter from '../components/Counter';
 import Particles from 'react-particles-js';
-import Clarifai from 'clarifai';
 import FaceRecognizer from '../components/FaceRecognizer';
 import SignInForm from '../components/SignIn';
 import Register from '../components/Register';
 
-const app = new Clarifai.App({
-  apiKey: '3dabb3c6ec5141b7ba4885f1636c9016'
-}); 
 const ParticleOptions = {
   particles: {
     number: {
@@ -25,6 +21,21 @@ const ParticleOptions = {
   }
 }
 
+const intialstate = {
+  input: "",
+  imageURL: "",
+  box: {
+  },
+  page: 'signin',
+  user: {
+    id: "",
+    name: "",
+    email: "", 
+    entries: 0,
+    joined: "" 
+}
+}
+
 class App extends React.Component{
 
   constructor(){
@@ -34,9 +45,18 @@ class App extends React.Component{
       imageURL: "",
       box: {
       },
-      page: 'signin'
+      page: 'signin',
+      user: {
+        id: "",
+        name: "",
+        email: "", 
+        entries: 0,
+        joined: "" 
+      }
     }
   }
+
+  
 
   CalculateFaceLocation = (data) => {
 
@@ -57,6 +77,10 @@ class App extends React.Component{
     this.setState({box:box})
   }
 
+  OnSignOut = () => {
+    this.setState(intialstate); 
+  }
+
   OnInputChange = (event) => {
     this.setState({
       input: event.target.value
@@ -65,13 +89,34 @@ class App extends React.Component{
   }
 
   OnSubmit = () => {
-    this.setState({
-      imageURL : this.state.input
-    });
+    this.setState({imageURL: this.state.input});
+      fetch('http://localhost:3000/imageurl', {
+        method: 'post',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          input: this.state.input
+        })
+      })
+      .then(response => response.json())
+      .then(response => {
+        if (response) {
+          fetch('http://localhost:3000/entries', {
+            method: 'put',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              id: this.state.user.id
+            })
+          })
+            .then(response => response.json())
+            .then(count => {
+              this.setState(Object.assign(this.state.user, { entries: count}))
+            })
+            .catch(console.log)
 
-    app.models.predict(Clarifai.FACE_DETECT_MODEL, this.state.input)
-    .then((response) => this.DisplayFaceBox(this.CalculateFaceLocation(response))).catch(err => console.log(err));
-
+        }
+        this.DisplayFaceBox(this.CalculateFaceLocation(response))
+      })
+      .catch(err => console.log(err));
   }
 
   OnPageChange = (route) => {
@@ -80,15 +125,25 @@ class App extends React.Component{
     })
   }
 
+  LoadUser = (userinfo) => {
+    this.setState({user:{
+        id: userinfo.id,
+        name: userinfo.name,
+        email: userinfo.email, 
+        entries: userinfo.entries,
+        joined: userinfo.joined 
+    }})
+  }
+
   render(){
 
     if (this.state.page === "home"){
     return(
     <div className = "App">
       <Particles className ="seethru" params={ParticleOptions}/>
-      <NavBar OnPageChangeFxn = {this.OnPageChange}/>
+      <NavBar OnSignOutFxn = {this.OnSignOut} OnPageChangeFxn = {this.OnPageChange}/>
       <Logo/>
-      <Counter/>
+      <Counter name = {this.state.user.name} numentries = {this.state.user.entries}/>
       <ImageLink className = "center" OnSubmitFxn = {this.OnSubmit} OnInputChangeFxn = {this.OnInputChange}/>
       <FaceRecognizer className= "center boundingbox" outline = {this.state.box} link = {this.state.imageURL} /> 
       </div>)
@@ -98,7 +153,7 @@ class App extends React.Component{
      return(
     <div className="App">
     <Particles className ="seethru" params={ParticleOptions}/>
-    <SignInForm OnPageChangeFxn ={this.OnPageChange}/>
+    <SignInForm LoadUserFxn = {this.LoadUser} OnPageChangeFxn ={this.OnPageChange}/>
     </div>
     )
     }
@@ -107,7 +162,7 @@ class App extends React.Component{
     return(
     <div className="App">
     <Particles className ="seethru" params={ParticleOptions}/>
-    <Register OnPageChangeFxn ={this.OnPageChange}/>
+    <Register LoadUserFxn = {this.LoadUser} OnPageChangeFxn ={this.OnPageChange}/>
     </div>
     )
     }
