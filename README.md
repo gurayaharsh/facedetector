@@ -5,7 +5,7 @@ This repository contains the front-end of the application.
 
 ## View
 
-[link](face-detection-machine.herokuapp.com "View Project").
+[View Project](http://face-detection-machine.herokuapp.com "View Project").
 
 
 ## Technology 
