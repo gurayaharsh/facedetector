@@ -14,6 +14,3 @@ This repository contains the front-end of the application.
 - CSS 
 - JavaScript 
 - React 
-- Node.js
-- PostgreSQL 
-- Heroku
