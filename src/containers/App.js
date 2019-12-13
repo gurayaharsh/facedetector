@@ -3,7 +3,7 @@ import './App.css';
 import NavBar from '../components/NavBar' ; 
 import Logo from '../components/Logo';
 import ImageLink from '../components/ImageLink';
-import Counter from '../components/Counter';
+import Greeting from '../components/Greeting';
 import Particles from 'react-particles-js';
 import FaceRecognizer from '../components/FaceRecognizer';
 import SignInForm from '../components/SignIn';
@@ -26,6 +26,7 @@ const intialstate = {
   imageURL: "",
   box: {
   },
+  guess: "",
   page: 'signin',
   user: {
     id: "",
@@ -45,6 +46,7 @@ class App extends React.Component{
       imageURL: "",
       box: {
       },
+      guess: "",
       page: 'signin',
       user: {
         id: "",
@@ -60,6 +62,7 @@ class App extends React.Component{
 
   CalculateFaceLocation = (data) => {
 
+    this.OnGuess(this.Predict(data));
     let face = data.outputs[0].data.regions[0].region_info.bounding_box;
     let image = document.getElementById("inputimage");
     let imagewidth = Number(image.width);
@@ -71,6 +74,21 @@ class App extends React.Component{
       rightcol : imagewidth - (face.right_col*imagewidth),
       bottomrow : imageheight -(face.bottom_row*imagewidth)
     }) 
+  }
+
+  Predict = (data) => {
+    let res = data.outputs[0].data.regions[0].data.face.identity.concepts[0].name;
+    let guess = res.split(" ");
+    let fname = guess[0].charAt(0).toUpperCase() + guess[0].slice(1)
+    let lname = guess[1].charAt(0).toUpperCase() + guess[1].slice(1);
+    return fname + " " + lname;
+  }
+
+  OnGuess = (guess) =>{
+    console.log(guess);
+    this.setState({
+      guess : guess
+    })
   }
 
   DisplayFaceBox = (box) => {
@@ -90,7 +108,7 @@ class App extends React.Component{
 
   OnSubmit = () => {
     this.setState({imageURL: this.state.input});
-      fetch('https://calm-ocean-65123.herokuapp.com/imageurl', {
+      fetch('http://localhost:3000/imageurl', {
         method: 'post',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
@@ -143,9 +161,9 @@ class App extends React.Component{
       <Particles className ="seethru" params={ParticleOptions}/>
       <NavBar OnSignOutFxn = {this.OnSignOut} OnPageChangeFxn = {this.OnPageChange}/>
       <Logo/>
-      <Counter name = {this.state.user.name} numentries = {this.state.user.entries}/>
+      <Greeting name = {this.state.user.name} numentries = {this.state.user.entries}/>
       <ImageLink className = "center" OnSubmitFxn = {this.OnSubmit} OnInputChangeFxn = {this.OnInputChange}/>
-      <FaceRecognizer className= "center boundingbox" outline = {this.state.box} link = {this.state.imageURL} /> 
+      <FaceRecognizer className= "center boundingbox" guess = {this.state.guess} outline = {this.state.box} link = {this.state.imageURL}/> 
       </div>)
       }
       
@@ -153,6 +171,7 @@ class App extends React.Component{
      return(
     <div className="App">
     <Particles className ="seethru" params={ParticleOptions}/>
+    <Logo/>
     <SignInForm LoadUserFxn = {this.LoadUser} OnPageChangeFxn ={this.OnPageChange}/>
     </div>
     )
@@ -162,6 +181,7 @@ class App extends React.Component{
     return(
     <div className="App">
     <Particles className ="seethru" params={ParticleOptions}/>
+    <Logo/>
     <Register LoadUserFxn = {this.LoadUser} OnPageChangeFxn ={this.OnPageChange}/>
     </div>
     )
