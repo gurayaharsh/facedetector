@@ -108,7 +108,7 @@ class App extends React.Component{
 
   OnSubmit = () => {
     this.setState({imageURL: this.state.input});
-      fetch('http://localhost:3000/imageurl', {
+      fetch('https://calm-ocean-65123.herokuapp.com/imageurl', {
         method: 'post',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({
